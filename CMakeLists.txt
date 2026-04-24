@@ -22,7 +22,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Library sources
-add_library(linux_wire
+add_library(linux_wire STATIC
     src/linux_wire.c
     src/Wire.cpp
 )
