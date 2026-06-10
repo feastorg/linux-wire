@@ -40,7 +40,7 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install dependencies
         run: |
@@ -67,7 +67,7 @@ jobs:
       image: debian:trixie
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install dependencies (Debian Trixie)
         run: |
@@ -91,7 +91,7 @@ jobs:
     runs-on: ubuntu-22.04-arm
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install dependencies
         run: |
