@@ -3,40 +3,46 @@ name: CI
 on:
   push:
     branches: [main]
-    paths:
-      - "CMakeLists.txt"
-      - "CMakePresets.json"
-      - ".github/workflows/ci.yml"
-      - "src/**"
-      - "include/**"
-      - "tests/**"
-      - "examples/**"
-      - "**/*.c"
-      - "**/*.cpp"
-      - "**/*.h"
-      - "**/*.hpp"
-
   pull_request:
     branches: [main]
-    paths:
-      - "CMakeLists.txt"
-      - "CMakePresets.json"
-      - ".github/workflows/ci.yml"
-      - "src/**"
-      - "include/**"
-      - "tests/**"
-      - "examples/**"
-      - "**/*.c"
-      - "**/*.cpp"
-      - "**/*.h"
-      - "**/*.hpp"
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
+  changes:
+    name: Detect changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      code: ${{ steps.filter.outputs.code }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            code:
+              - 'CMakeLists.txt'
+              - 'CMakePresets.json'
+              - '.github/workflows/ci.yml'
+              - 'src/**'
+              - 'include/**'
+              - 'tests/**'
+              - 'examples/**'
+              - '**/*.c'
+              - '**/*.cpp'
+              - '**/*.h'
+              - '**/*.hpp'
+
   # -------------------------
   # Native Ubuntu Build
   # -------------------------
   build-ubuntu:
     name: Build (Ubuntu 22.04)
+    needs: [changes]
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-22.04
 
     steps:
@@ -61,6 +67,8 @@ jobs:
   # -------------------------
   build-debian-trixie:
     name: Build (Debian Trixie Container)
+    needs: [changes]
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
 
     container:
@@ -88,6 +96,8 @@ jobs:
   # -------------------------
   build-arm64:
     name: Build (ARM64)
+    needs: [changes]
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-22.04-arm
 
     steps:
@@ -106,3 +116,18 @@ jobs:
 
       - name: Test
         run: ctest --preset dev
+
+  # ─── Unified gate ─────────────────────────────────────────────────────────
+  # Branch protection requires only: CI / ok
+  ok:
+    name: ok
+    if: always()
+    needs: [changes, build-ubuntu, build-debian-trixie, build-arm64]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Fail if any upstream job failed or was cancelled
+        if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
+        run: exit 1
+      - name: Pass
+        run: echo 'All checks passed or were skipped'
