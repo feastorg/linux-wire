@@ -23,6 +23,7 @@ typedef struct
 | `int lw_open_bus(lw_i2c_bus *bus, const char *path);`       | Opens `/dev/i2c-X` and populates the handle. Returns `0` on success, `-1` on error (sets `errno`) and resets the handle to a closed state on failure. |
 | `void lw_close_bus(lw_i2c_bus *bus);`                       | Closes the file descriptor if open. Safe to call multiple times.                                   |
 | `int lw_set_slave(lw_i2c_bus *bus, uint8_t addr);`          | Issues `I2C_SLAVE` ioctl to select the target address. Rejects values above `0x7F` with `EINVAL`. |
+| `int lw_probe(lw_i2c_bus *bus, uint8_t addr);`              | SMBus Quick Write: address + write bit, no data. Returns `0` if the address acknowledged, `-1` otherwise (`errno` set; `EBUSY` means a kernel driver owns it, i.e. present). The only zero-data probe; `lw_write`/`lw_ioctl_write` reject empty messages. |
 | `int lw_set_timeout(lw_i2c_bus *bus, uint32_t timeout_us);` | Stores a timeout hint (currently informational).                                                   |
 
 ### Simple Read/Write

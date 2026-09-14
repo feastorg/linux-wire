@@ -74,7 +74,7 @@ lw_write(&bus, &value, 1, 1);
 lw_close_bus(&bus);
 ```
 
-The C API exposes `lw_open_bus`, `lw_set_slave`, `lw_write`, `lw_read`, `lw_ioctl_read`, and `lw_ioctl_write`. These match the semantics of `_reference/libi2c`, but the surface area stays intentionally small for clarity. All functions validate buffers and return `-1` with `errno` set on failure.
+The C API exposes `lw_open_bus`, `lw_set_slave`, `lw_probe`, `lw_write`, `lw_read`, `lw_ioctl_read`, and `lw_ioctl_write`. These match the semantics of `_reference/libi2c`, but the surface area stays intentionally small for clarity. All functions validate buffers and return `-1` with `errno` set on failure.
 
 ### C++ `TwoWire`
 

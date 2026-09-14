@@ -4,6 +4,8 @@
 #include <errno.h>
 #include <stdint.h>
 #include <string.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 #define EXPECT_ERR(call, err)       \
     do                              \
@@ -43,6 +45,7 @@ int main(void)
     assert(bus.timeout_us == 0);
 
     EXPECT_ERR(lw_set_slave(&bus, 0x10), EBADF);
+    EXPECT_ERR(lw_probe(&bus, 0x10), EBADF);
 
     uint8_t byte = 0x00;
     uint8_t buf[1];
@@ -55,10 +58,25 @@ int main(void)
 
     bus.fd = 0; /* bypass fd check to hit other validation branches */
     EXPECT_ERR(lw_set_slave(&bus, 0x80), EINVAL);
+    EXPECT_ERR(lw_probe(&bus, 0x80), EINVAL);
+    EXPECT_ERR(lw_probe(NULL, 0x10), EINVAL);
 
     EXPECT_ERR(lw_ioctl_write(&bus, 0x20, NULL, 1, &byte, 1, 0), EINVAL);
     EXPECT_ERR(lw_ioctl_write(&bus, 0x20, &byte, 1, NULL, 1, 0), EINVAL);
     EXPECT_ERR(lw_ioctl_write(&bus, 0x20, NULL, 0, NULL, 0, 0), EINVAL);
+
+    /* A real fd that is not an I2C adapter: the I2C_SLAVE ioctl fails with
+       ENOTTY, proving lw_probe reaches the ioctl and propagates errno. */
+    {
+        int fd = open("/dev/null", O_RDWR);
+        assert(fd >= 0);
+        bus.fd = fd;
+        bus.log_errors = 0;
+        EXPECT_ERR(lw_probe(&bus, 0x10), ENOTTY);
+        close(fd);
+        bus.fd = 0;
+        bus.log_errors = 1;
+    }
 
     lw_set_error_logging(&bus, 0);
     assert(bus.log_errors == 0);

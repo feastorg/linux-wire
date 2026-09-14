@@ -91,6 +91,34 @@ extern "C"
     int lw_set_slave(lw_i2c_bus *bus, uint8_t addr);
 
     /**
+     * @brief Check whether a device acknowledges an address, without
+     *        transferring any data.
+     *
+     * Issues an SMBus Quick Write (I2C_SMBUS ioctl, I2C_SMBUS_QUICK): the
+     * address is sent with the write bit and the transaction ends there.
+     * This is the probe i2cdetect uses by default, and it is the only way
+     * to test for a device without reading from it or writing to it -
+     * lw_write() and lw_ioctl_write() cannot send a zero-length message.
+     *
+     * The device is selected with the I2C_SLAVE ioctl first, so a device
+     * already claimed by a kernel driver reports EBUSY rather than being
+     * probed; treat that as "present".
+     *
+     * @param bus Pointer to open lw_i2c_bus
+     * @param addr 7-bit I2C address (0x00-0x7F)
+     *
+     * @return 0 if the address acknowledged, -1 otherwise (errno set)
+     *
+     * Error conditions:
+     *   EINVAL - NULL bus or address above 0x7F
+     *   EBADF  - Bus not open (fd < 0)
+     *   EBUSY  - Address claimed by a kernel driver (device present)
+     *   ENXIO, EREMOTEIO, EIO, ETIMEDOUT - no acknowledge (device absent),
+     *            or the adapter does not support SMBus Quick (EOPNOTSUPP)
+     */
+    int lw_probe(lw_i2c_bus *bus, uint8_t addr);
+
+    /**
      * Write data to the currently-selected I2C slave.
      *
      * @param bus Pointer to open lw_i2c_bus

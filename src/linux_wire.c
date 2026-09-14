@@ -148,6 +148,43 @@ int lw_set_slave(lw_i2c_bus *bus, uint8_t addr)
     return 0;
 }
 
+int lw_probe(lw_i2c_bus *bus, uint8_t addr)
+{
+    if (!bus || addr > 0x7F)
+    {
+        errno = EINVAL;
+        return -1;
+    }
+
+    if (bus->fd < 0)
+    {
+        errno = EBADF;
+        return -1;
+    }
+
+    if (lw_set_slave(bus, addr) != 0)
+    {
+        return -1; /* errno from the I2C_SLAVE ioctl (EBUSY if a driver owns it) */
+    }
+
+    /* SMBus Quick Write: address + write bit, then STOP. No data phase. */
+    struct i2c_smbus_ioctl_data args;
+    memset(&args, 0, sizeof(args));
+    args.read_write = I2C_SMBUS_WRITE;
+    args.command = 0;
+    args.size = I2C_SMBUS_QUICK;
+    args.data = NULL;
+
+    if (ioctl(bus->fd, I2C_SMBUS, &args) < 0)
+    {
+        /* A NACK is the expected outcome for an empty address; do not log it
+           through perror, callers scan whole ranges with this. */
+        return -1;
+    }
+
+    return 0;
+}
+
 ssize_t lw_write(lw_i2c_bus *bus,
                  const uint8_t *data,
                  size_t len,
