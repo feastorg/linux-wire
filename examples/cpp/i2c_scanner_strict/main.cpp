@@ -8,7 +8,7 @@
  *
  * This prevents false positives from devices that ACK address probes but
  *
- * would NACK real writes (e.g., AVR/ATmega Wire slaves).
+ * would NACK real writes (e.g., AVR/ATmega Wire peripherals).
  *
  * Useful when scanning buses with AVR Wire devices or when verifying that
  *
