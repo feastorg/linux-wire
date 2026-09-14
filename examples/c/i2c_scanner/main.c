@@ -19,13 +19,16 @@ int main(void)
 
     printf("Scanning I2C bus /dev/i2c-1...\n");
 
-    uint8_t buf[1];
     for (int addr = 0x03; addr <= 0x77; ++addr)
     {
-        /* Try a small read to detect a responsive device */
-        ssize_t r = lw_ioctl_read(&bus, (uint16_t)addr, NULL, 0, buf, 1, 0);
-        if (r == 1) {
+        /* Address-only probe (SMBus Quick Write): nothing is read from or
+           written to the device, unlike a one-byte read, which advances a
+           register pointer or consumes a pending response. */
+        int rc = lw_probe(&bus, (uint8_t)addr);
+        if (rc == 0) {
             printf("Found device at 0x%02X\n", addr);
+        } else if (rc == 1) {
+            printf("Found device at 0x%02X (in use by a kernel driver)\n", addr);
         }
     }
 

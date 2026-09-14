@@ -222,6 +222,50 @@ static void testDeferredWriteFlushFailureBlocksNewTransmission()
     tw.end();
 }
 
+static void testEmptyTransmissionProbesInsteadOfWriting()
+{
+    /* An empty endTransmission() is the Arduino idiom for "is anyone at this
+       address?". lw_write cannot send zero bytes, so it must use lw_probe. */
+    mockLinuxWireReset();
+
+    TwoWire tw;
+    tw.begin("/dev/i2c-mock");
+
+    tw.beginTransmission(static_cast<uint8_t>(0x40));
+    assert(tw.endTransmission() == 0); /* ACK */
+    {
+        const auto &state = mockLinuxWireState();
+        assert(state.probeCalls == 1);
+        assert(state.lastProbeAddr == 0x40);
+        assert(state.writeCalls == 0);
+    }
+
+    mockLinuxWireSetProbeResult(1, 0); /* owned by a kernel driver: present */
+    tw.beginTransmission(static_cast<uint8_t>(0x68));
+    assert(tw.endTransmission() == 0);
+
+    mockLinuxWireSetProbeResult(-1, ENXIO); /* NACK on address */
+    tw.beginTransmission(static_cast<uint8_t>(0x41));
+    assert(tw.endTransmission() == 2);
+
+    mockLinuxWireSetProbeResult(-1, EOPNOTSUPP); /* adapter cannot probe */
+    tw.beginTransmission(static_cast<uint8_t>(0x42));
+    assert(tw.endTransmission() == 4);
+
+    /* A transmission with data still goes through lw_write, not lw_probe. */
+    mockLinuxWireSetProbeResult(0, 0);
+    tw.beginTransmission(static_cast<uint8_t>(0x43));
+    tw.write(static_cast<uint8_t>(0x01));
+    assert(tw.endTransmission() == 0);
+    {
+        const auto &state = mockLinuxWireState();
+        assert(state.probeCalls == 4);
+        assert(state.writeCalls == 1);
+    }
+
+    tw.end();
+}
+
 static void testTxBufferOverflow()
 {
     mockLinuxWireReset();
@@ -330,6 +374,7 @@ int main()
     testDeferredWriteFlushes();
     testDeferredWriteFlushFailureBlocksRequestFrom();
     testDeferredWriteFlushFailureBlocksNewTransmission();
+    testEmptyTransmissionProbesInsteadOfWriting();
     testTxBufferOverflow();
     testFlushOnDifferentAddress();
     testZeroInternalAddressFallback();

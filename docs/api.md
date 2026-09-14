@@ -99,7 +99,7 @@ The helpers validate inputs (non-null buffers, length ≤ 4096, etc.) before cal
 
 See the `examples/` directory for concrete flows:
 
-- `i2c_scanner`: iterates over addresses and uses `endTransmission()` to probe each one.
+- `i2c_scanner`: iterates over addresses and probes each one — the C++ version through an empty `endTransmission()` (which uses `lw_probe()` underneath), the C version through `lw_probe()` directly. Neither reads from or writes to the devices it finds.
 - `master_writer`: simple register write.
 - `master_reader`: demonstrates `endTransmission(false)` + `requestFrom` repeated-start read.
 
