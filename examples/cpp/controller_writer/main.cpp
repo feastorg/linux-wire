@@ -11,7 +11,7 @@ int main()
 {
     Wire.begin("/dev/i2c-1");
 
-    printf("Master Writer Example\n");
+    printf("Controller Writer Example\n");
 
     Wire.beginTransmission(DEVICE_ADDR);
     Wire.write(REGISTER_ADDR);

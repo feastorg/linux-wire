@@ -9,12 +9,12 @@ struct MockLinuxWireState
     int openCalls = 0;
     int closeCalls = 0;
     std::string lastDevicePath;
-    int setSlaveCalls = 0;
-    uint8_t lastSetSlaveAddr = 0;
+    int setTargetCalls = 0;
+    uint8_t lastSetTargetAddr = 0;
     int writeCalls = 0;
     std::vector<uint8_t> lastWriteBuffer;
     bool lastWriteWasIoctl = false;
-    uint8_t lastWriteSlaveAddr = 0;
+    uint8_t lastWriteTargetAddr = 0;
     int logErrors = 1;
     int setErrorLoggingCalls = 0;
     int setTimeoutCalls = 0;
@@ -33,8 +33,8 @@ void mockLinuxWireSetReadData(const std::vector<uint8_t> &data);
 void mockLinuxWireSetIoctlReadData(const std::vector<uint8_t> &data);
 void mockLinuxWireForceReadError(int err);
 void mockLinuxWireClearReadError();
-void mockLinuxWireForceSetSlaveError(int err);
-void mockLinuxWireClearSetSlaveError();
+void mockLinuxWireForceSetTargetError(int err);
+void mockLinuxWireClearSetTargetError();
 void mockLinuxWireForceWriteError(int err);
 void mockLinuxWireClearWriteError();
 /* lw_probe result: 0 ACK (default), 1 driver-owned, -1 with errno. */

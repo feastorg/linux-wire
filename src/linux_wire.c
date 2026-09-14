@@ -114,7 +114,7 @@ void lw_close_bus(lw_i2c_bus *bus)
     bus->timeout_us = 0;
 }
 
-int lw_set_slave(lw_i2c_bus *bus, uint8_t addr)
+int lw_set_target(lw_i2c_bus *bus, uint8_t addr)
 {
     if (!bus)
     {
@@ -139,7 +139,7 @@ int lw_set_slave(lw_i2c_bus *bus, uint8_t addr)
         int saved_errno = errno;
         if (bus->log_errors)
         {
-            perror("lw_set_slave: I2C_SLAVE");
+            perror("lw_set_target: I2C_SLAVE");
         }
         errno = saved_errno;
         return -1;
@@ -168,7 +168,7 @@ int lw_probe(lw_i2c_bus *bus, uint8_t addr)
         return -1;
     }
 
-    /* Select the address directly rather than via lw_set_slave(): a driver-
+    /* Select the address directly rather than via lw_set_target(): a driver-
        owned address is a normal result of a sweep, not an error to perror. */
     if (ioctl(bus->fd, I2C_SLAVE, (unsigned long)addr) < 0)
     {

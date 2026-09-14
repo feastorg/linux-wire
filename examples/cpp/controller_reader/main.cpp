@@ -11,7 +11,7 @@ int main()
 {
     Wire.begin("/dev/i2c-1");
 
-    printf("Master Reader Example\n");
+    printf("Controller Reader Example\n");
 
     // Write the register address we want to read
     Wire.beginTransmission(DEVICE_ADDR);

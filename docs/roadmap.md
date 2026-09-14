@@ -2,7 +2,7 @@
 
 **Note:** Items listed here are potential future directions. No commitment is made regarding order, timing, or whether any specific item will be implemented.
 
-**Scope:** linux-wire focuses on I²C **master mode only**. For I²C slave mode investigation, see [slave-mode-investigation.md](slave-mode-investigation.md).
+**Scope:** linux-wire focuses on I²C **controller mode only**. For the target (kernel "i2c-slave") mode investigation, see [slave-mode-investigation.md](slave-mode-investigation.md).
 
 ---
 
@@ -27,7 +27,7 @@
 - Automatic bus recovery (stuck SDA/SCL)
 - Clock stretching timeout handling
 - NAK/timeout retry strategies
-- Multi-master arbitration loss recovery
+- Multi-controller arbitration loss recovery
 
 ### Documentation
 
@@ -42,15 +42,15 @@
 
 **Resources:**
 
-- [I²C Multi-Master Spec](https://www.nxp.com/docs/en/user-guide/UM10204.pdf)
+- [I²C Multi-Controller Spec](https://www.nxp.com/docs/en/user-guide/UM10204.pdf)
 - [SMBus Specification](http://smbus.org/specs/)
 
-### Multi-Master Support
+### Multi-Controller Support
 
 - Arbitration loss handling
 - Clock stretching configuration (sysfs)
 - Bus recovery mechanisms (SCL toggling)
-- Raspberry Pi multi-master documentation
+- Raspberry Pi multi-controller documentation
 
 ### Extended Addressing & Protocols
 

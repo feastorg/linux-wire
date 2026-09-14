@@ -125,7 +125,7 @@ static void testDeferredWriteFlushes()
 
     const auto &state = mockLinuxWireState();
     assert(state.writeCalls == 1);
-    assert(state.lastSetSlaveAddr == 0x22);
+    assert(state.lastSetTargetAddr == 0x22);
     assert(state.lastWriteBuffer.size() == 1);
     assert(state.lastWriteBuffer[0] == 0x55);
 
@@ -156,7 +156,7 @@ static void testInternalAddressRequestFlushesPendingWrite()
     const auto &state = mockLinuxWireState();
     assert(state.writeCalls == 1);
     assert(!state.lastWriteWasIoctl);
-    assert(state.lastWriteSlaveAddr == 0x10);
+    assert(state.lastWriteTargetAddr == 0x10);
     assert(state.ioctlReadCalls == 1);
     assert(state.lastIoctlAddr == 0x20);
     assert(state.lastIoctlInternal.size() == 1);
@@ -176,17 +176,17 @@ static void testDeferredWriteFlushFailureBlocksRequestFrom()
     tw.write(static_cast<uint8_t>(0xAA));
     assert(tw.endTransmission(false) == 0);
 
-    mockLinuxWireForceSetSlaveError(ENXIO);
+    mockLinuxWireForceSetTargetError(ENXIO);
     uint8_t count = tw.requestFrom(static_cast<uint8_t>(0x20), static_cast<uint8_t>(1));
     assert(count == 0);
     assert(tw.available() == 0);
 
     const auto &state = mockLinuxWireState();
-    assert(state.setSlaveCalls == 1);
+    assert(state.setTargetCalls == 1);
     assert(state.readCalls == 0);
     assert(state.writeCalls == 0);
 
-    mockLinuxWireClearSetSlaveError();
+    mockLinuxWireClearSetTargetError();
     tw.beginTransmission(static_cast<uint8_t>(0x20));
     assert(tw.write(static_cast<uint8_t>(0x01)) == 1);
     assert(tw.endTransmission() == 0);
@@ -212,7 +212,7 @@ static void testDeferredWriteFlushFailureBlocksNewTransmission()
 
     const auto &state = mockLinuxWireState();
     assert(state.writeCalls == 1);
-    assert(state.lastWriteSlaveAddr == 0x22);
+    assert(state.lastWriteTargetAddr == 0x22);
 
     mockLinuxWireClearWriteError();
     tw.beginTransmission(static_cast<uint8_t>(0x33));
@@ -334,7 +334,7 @@ static void testFlushOnDifferentAddress()
     const auto &state = mockLinuxWireState();
     assert(state.writeCalls == 1);
     assert(!state.lastWriteWasIoctl);
-    assert(state.lastWriteSlaveAddr == 0x10);
+    assert(state.lastWriteTargetAddr == 0x10);
     assert(state.lastWriteBuffer.size() == 1);
     assert(state.lastWriteBuffer[0] == 0xAA);
 

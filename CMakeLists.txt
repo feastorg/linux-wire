@@ -47,14 +47,14 @@ if(LINUX_WIRE_BUILD_EXAMPLES)
     add_executable(i2c_scanner_strict_cpp examples/cpp/i2c_scanner_strict/main.cpp)
     target_link_libraries(i2c_scanner_strict_cpp PRIVATE linux_wire)
 
-    add_executable(master_multiplier_cpp examples/cpp/master_multiplier/main.cpp)
-    target_link_libraries(master_multiplier_cpp PRIVATE linux_wire)
+    add_executable(controller_multiplier_cpp examples/cpp/controller_multiplier/main.cpp)
+    target_link_libraries(controller_multiplier_cpp PRIVATE linux_wire)
 
-    add_executable(master_writer_cpp examples/cpp/master_writer/main.cpp)
-    target_link_libraries(master_writer_cpp PRIVATE linux_wire)
+    add_executable(controller_writer_cpp examples/cpp/controller_writer/main.cpp)
+    target_link_libraries(controller_writer_cpp PRIVATE linux_wire)
 
-    add_executable(master_reader_cpp examples/cpp/master_reader/main.cpp)
-    target_link_libraries(master_reader_cpp PRIVATE linux_wire)
+    add_executable(controller_reader_cpp examples/cpp/controller_reader/main.cpp)
+    target_link_libraries(controller_reader_cpp PRIVATE linux_wire)
 
     # C example binaries (new) — mirrors the C++ examples but use the C API
     add_executable(i2c_scanner_c examples/c/i2c_scanner/main.c)
@@ -63,14 +63,14 @@ if(LINUX_WIRE_BUILD_EXAMPLES)
     add_executable(i2c_scanner_strict_c examples/c/i2c_scanner_strict/main.c)
     target_link_libraries(i2c_scanner_strict_c PRIVATE linux_wire)
 
-    add_executable(master_multiplier_c examples/c/master_multiplier/main.c)
-    target_link_libraries(master_multiplier_c PRIVATE linux_wire)
+    add_executable(controller_multiplier_c examples/c/controller_multiplier/main.c)
+    target_link_libraries(controller_multiplier_c PRIVATE linux_wire)
 
-    add_executable(master_writer_c examples/c/master_writer/main.c)
-    target_link_libraries(master_writer_c PRIVATE linux_wire)
+    add_executable(controller_writer_c examples/c/controller_writer/main.c)
+    target_link_libraries(controller_writer_c PRIVATE linux_wire)
 
-    add_executable(master_reader_c examples/c/master_reader/main.c)
-    target_link_libraries(master_reader_c PRIVATE linux_wire)
+    add_executable(controller_reader_c examples/c/controller_reader/main.c)
+    target_link_libraries(controller_reader_c PRIVATE linux_wire)
 endif()
 
 install(TARGETS linux_wire
