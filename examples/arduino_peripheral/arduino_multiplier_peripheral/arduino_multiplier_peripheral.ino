@@ -3,7 +3,7 @@
 /*
 Expected output:
 ```
-HH:MM:SS.mmm -> I2C Multiplier Slave at 0x40
+HH:MM:SS.mmm -> I2C Multiplier Peripheral at 0x40
 HH:MM:SS.mmm -> RX X=7  →  stored R=35
 HH:MM:SS.mmm -> TX R=35
 ```
@@ -47,7 +47,7 @@ void setup()
     Serial.begin(115200);
     delay(200);
 
-    Serial.print("I2C Multiplier Slave at 0x");
+    Serial.print("I2C Multiplier Peripheral at 0x");
     Serial.println(DEVICE_ADDRESS, HEX);
 
     Wire.begin(DEVICE_ADDRESS);

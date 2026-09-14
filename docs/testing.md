@@ -29,11 +29,11 @@ Tests covered:
 
 Mock tests catch logic regressions, but you should still validate on real hardware before tagging releases:
 
-1. **Setup**: Attach an I2C peripheral to `/dev/i2c-1`. You can use the Arduino companion sketch in [examples](./examples.md), which exposes a simple slave at `0x40`. Ensure `i2c-dev` is loaded (`sudo modprobe i2c-dev`).
+1. **Setup**: Attach an I2C peripheral to `/dev/i2c-1`. You can use the Arduino companion sketch in [examples](./examples.md), which exposes a simple peripheral at `0x40`. Ensure `i2c-dev` is loaded (`sudo modprobe i2c-dev`).
 2. **Scanner**: From `build/`, run `sudo ./i2c_scanner`. Confirm your peripheral shows up (the Arduino sketch will report at `0x40`).
-3. **Writer**: Run `sudo ./master_writer` (or pass `--help` to adjust bus/address/register). Watch the Arduino serial log to confirm the byte was received.
-4. **Reader / Repeated Start**: Run `sudo ./master_reader`. It performs `endTransmission(false)` followed by `requestFrom()`, verifying the repeated-start path.
-5. **Extended exercise**: `sudo ./master_multiplier` writes a rolling pattern, then reads it back, providing a simple stress test.
+3. **Writer**: Run `sudo ./controller_writer` (or pass `--help` to adjust bus/address/register). Watch the Arduino serial log to confirm the byte was received.
+4. **Reader / Repeated Start**: Run `sudo ./controller_reader`. It performs `endTransmission(false)` followed by `requestFrom()`, verifying the repeated-start path.
+5. **Extended exercise**: `sudo ./controller_multiplier` writes a rolling pattern, then reads it back, providing a simple stress test.
 6. **Custom tests**: Integrate `linux_wire` into your application and validate against the target device(s).
 
 ## Continuous Integration

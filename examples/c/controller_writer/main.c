@@ -1,5 +1,5 @@
 /*
- * C example: master_writer
+ * C example: controller_writer
  * Writes a register and a value to an I2C device using the C API.
  */
 
@@ -20,7 +20,7 @@ int main(void)
         return 1;
     }
 
-    printf("Master Writer Example\n");
+    printf("Controller Writer Example\n");
 
     uint8_t value = 0xAB;
     ssize_t r = lw_ioctl_write(&bus, DEVICE_ADDR, &REGISTER_ADDR, 1, &value, 1, 0);

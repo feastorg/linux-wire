@@ -28,9 +28,9 @@ This folder contains small C example programs that exercise the linux-wire C API
 2. Examples are built into `build/dev/` with names like:
    - `i2c_scanner_c` — address-only probe (`lw_probe`, SMBus Quick Write)
    - `i2c_scanner_strict_c` — stricter probe (forces a data write)
-   - `master_writer_c` — write a register
-   - `master_reader_c` — read a register (repeated-start)
-   - `master_multiplier_c` — demo request/response
+   - `controller_writer_c` — write a register
+   - `controller_reader_c` — read a register (repeated-start)
+   - `controller_multiplier_c` — demo request/response
 
 ## Quick safety checklist
 

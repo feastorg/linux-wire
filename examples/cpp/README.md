@@ -25,9 +25,9 @@ Representative binary names (in `build/dev/`):
 
 - `i2c_scanner_cpp`
 - `i2c_scanner_strict_cpp`
-- `master_writer_cpp`
-- `master_reader_cpp`
-- `master_multiplier_cpp`
+- `controller_writer_cpp`
+- `controller_reader_cpp`
+- `controller_multiplier_cpp`
 
 ## Notes
 

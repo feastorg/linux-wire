@@ -37,7 +37,7 @@ void setup()
     Wire.onReceive(receiveEvent);
     Wire.onRequest(requestEvent);
 
-    Serial.print("I2C Slave ready at 0x");
+    Serial.print("I2C Peripheral ready at 0x");
     Serial.println(DEVICE_ADDRESS, HEX);
 }
 

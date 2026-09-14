@@ -2,7 +2,7 @@
 
 ## Arduino Peripheral Companion
 
-Use this sketch to emulate a simple I²C slave that works with the `linux-wire` examples (`i2c_scanner`, `master_reader`, `master_writer`, `master_multiplier`). Flash it onto an Arduino (Nano/Uno) and connect it to your Raspberry Pi via a bidirectional level shifter.
+Use this sketch to emulate a simple I²C peripheral that works with the `linux-wire` examples (`i2c_scanner`, `controller_reader`, `controller_writer`, `controller_multiplier`). Flash it onto an Arduino (Nano/Uno) and connect it to your Raspberry Pi via a bidirectional level shifter.
 
 ### Wiring
 
@@ -54,7 +54,7 @@ void loop()
 }
 ```
 
-This mirrors the stock Arduino `Wire` slave examples: whatever byte the master last wrote will be returned on the next read.
+This mirrors the stock Arduino `Wire` peripheral examples: whatever byte the controller last wrote will be returned on the next read.
 
 ### Test Flow
 
@@ -64,9 +64,9 @@ This mirrors the stock Arduino `Wire` slave examples: whatever byte the master l
    ```sh
    cd build
    sudo ./i2c_scanner            # should report the device at 0x40
-   sudo ./master_writer          # writes a test pattern to the Nano
-   sudo ./master_reader          # reads it back
-   sudo ./master_multiplier      # optional rolling pattern test
+   sudo ./controller_writer          # writes a test pattern to the Nano
+   sudo ./controller_reader          # reads it back
+   sudo ./controller_multiplier      # optional rolling pattern test
    ```
 
    Each binary accepts optional command-line arguments (`--help`) if you need to change bus, address, or payload.

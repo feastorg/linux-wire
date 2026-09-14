@@ -8,7 +8,7 @@
  *
  * This prevents false positives from devices that ACK address probes but
  *
- * would NACK real writes (e.g., AVR/ATmega Wire slaves).
+ * would NACK real writes (e.g., AVR/ATmega Wire peripherals).
  *
  * Useful when scanning buses with AVR Wire devices or when verifying that
  *
@@ -37,7 +37,7 @@ int main(void)
     uint8_t dummy = 0x00;
     for (int addr = 0x03; addr <= 0x77; ++addr)
     {
-        if (lw_set_slave(&bus, (uint8_t)addr) != 0)
+        if (lw_set_target(&bus, (uint8_t)addr) != 0)
             continue;
 
         ssize_t w = lw_write(&bus, &dummy, 1, 1);

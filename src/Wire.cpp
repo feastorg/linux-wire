@@ -75,8 +75,8 @@ void TwoWire::begin(const char *device)
 
 void TwoWire::begin(uint8_t /*address*/)
 {
-    /* Slave mode is not supported on Linux user-space.
-       Linux I2C slave support requires kernel-mode drivers.
+    /* Target (peripheral) mode is not supported on Linux user-space.
+       Linux I2C target support requires kernel-mode drivers.
        This method exists for Arduino API compatibility only. */
 }
 
@@ -208,8 +208,8 @@ uint8_t TwoWire::endTransmission(uint8_t sendStop)
         return 4; /* timeout, adapter cannot probe, or bus error */
     }
 
-    /* Select slave */
-    if (lw_set_slave(&bus_, txAddress_) != 0)
+    /* Select target */
+    if (lw_set_target(&bus_, txAddress_) != 0)
     {
         handleTimeoutFromErrno();
         resetTxBuffer();
@@ -326,8 +326,8 @@ size_t TwoWire::write(uint8_t data)
 {
     if (!transmitting_)
     {
-        /* On Arduino this could be "slave send mode";
-           here we do nothing as slave mode is unsupported. */
+        /* On Arduino this could be "peripheral send mode";
+           here we do nothing as target mode is unsupported. */
         return 0;
     }
 
@@ -470,8 +470,8 @@ uint8_t TwoWire::requestFrom(uint8_t address,
     }
     else
     {
-        /* Standard read: set slave address then read */
-        if (lw_set_slave(&bus_, address) != 0)
+        /* Standard read: select the target address then read */
+        if (lw_set_target(&bus_, address) != 0)
         {
             handleTimeoutFromErrno();
             resetRxBuffer();
@@ -571,7 +571,7 @@ bool TwoWire::flushPendingRepeatedStart()
         return false;
     }
 
-    if (lw_set_slave(&bus_, txAddress_) != 0)
+    if (lw_set_target(&bus_, txAddress_) != 0)
     {
         handleTimeoutFromErrno();
         hasPendingTxForRead_ = false;

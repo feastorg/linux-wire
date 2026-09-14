@@ -2,7 +2,7 @@
 
 ## Overview
 
-`linux-wire` is a minimal Linux-native implementation of Arduino's `Wire` API. The goal is to provide a tiny C backend over `/dev/i2c-*` and a drop-in `TwoWire` C++ wrapper so Raspberry Pi-class systems can reuse Arduino-style sketches without pulling in heavy dependencies. The library is master-mode only and mirrors Arduino buffer semantics (`BUFFER_LENGTH = 32`).
+`linux-wire` is a minimal Linux-native implementation of Arduino's `Wire` API. The goal is to provide a tiny C backend over `/dev/i2c-*` and a drop-in `TwoWire` C++ wrapper so Raspberry Pi-class systems can reuse Arduino-style sketches without pulling in heavy dependencies. The library is controller-mode only and mirrors Arduino buffer semantics (`BUFFER_LENGTH = 32`).
 
 Key design points:
 
@@ -54,9 +54,9 @@ After building with `dev` or `release`, the example binaries live under that pre
 # Scan for devices on /dev/i2c-1:
 sudo ./build/dev/i2c_scanner_cpp /dev/i2c-1
 # Read 2 bytes from register 0x00 of device at 0x40:
-sudo ./build/dev/master_reader_cpp /dev/i2c-1 0x40 0x00 2
+sudo ./build/dev/controller_reader_cpp /dev/i2c-1 0x40 0x00 2
 # Write 3 bytes (0x01, 0x02, 0x03) to register 0x00 of device at 0x40:
-sudo ./build/dev/master_writer_cpp /dev/i2c-1 0x40 0x00 0x01 0x02 0x03
+sudo ./build/dev/controller_writer_cpp /dev/i2c-1 0x40 0x00 0x01 0x02 0x03
 ```
 
 ## Usage Guide
@@ -68,13 +68,13 @@ sudo ./build/dev/master_writer_cpp /dev/i2c-1 0x40 0x00 0x01 0x02 0x03
 
 lw_i2c_bus bus;
 lw_open_bus(&bus, "/dev/i2c-1");
-lw_set_slave(&bus, 0x40);
+lw_set_target(&bus, 0x40);
 uint8_t value = 0xAB;
 lw_write(&bus, &value, 1, 1);
 lw_close_bus(&bus);
 ```
 
-The C API exposes `lw_open_bus`, `lw_set_slave`, `lw_probe`, `lw_write`, `lw_read`, `lw_ioctl_read`, and `lw_ioctl_write`. These match the semantics of `_reference/libi2c`, but the surface area stays intentionally small for clarity. All functions validate buffers and return `-1` with `errno` set on failure.
+The C API exposes `lw_open_bus`, `lw_set_target`, `lw_probe`, `lw_write`, `lw_read`, `lw_ioctl_read`, and `lw_ioctl_write`. These match the semantics of `_reference/libi2c`, but the surface area stays intentionally small for clarity. All functions validate buffers and return `-1` with `errno` set on failure.
 
 ### C++ `TwoWire`
 
@@ -113,7 +113,7 @@ For hardware validation (recommended before release):
 
 1. Connect a known I²C device to `/dev/i2c-1` (Raspberry Pi default).
 2. Run `./build/i2c_scanner` to ensure the device shows up.
-3. Adapt `examples/master_reader` or `examples/master_writer` with the target address/registers and confirm reads/writes succeed.
+3. Adapt `examples/controller_reader` or `examples/controller_writer` with the target address/registers and confirm reads/writes succeed.
 
 See [docs/testing.md](./testing.md) for detailed steps.
 

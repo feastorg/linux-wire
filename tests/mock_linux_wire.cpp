@@ -17,8 +17,8 @@ namespace
         std::vector<uint8_t> ioctlReadData;
         bool failRead = false;
         int failReadErrno = ETIMEDOUT;
-        bool failSetSlave = false;
-        int failSetSlaveErrno = ENXIO;
+        bool failSetTarget = false;
+        int failSetTargetErrno = ENXIO;
         bool failWrite = false;
         int failWriteErrno = EIO;
         int probeResult = 0;
@@ -62,15 +62,15 @@ void mockLinuxWireClearReadError()
     g_config.failRead = false;
 }
 
-void mockLinuxWireForceSetSlaveError(int err)
+void mockLinuxWireForceSetTargetError(int err)
 {
-    g_config.failSetSlave = true;
-    g_config.failSetSlaveErrno = err;
+    g_config.failSetTarget = true;
+    g_config.failSetTargetErrno = err;
 }
 
-void mockLinuxWireClearSetSlaveError()
+void mockLinuxWireClearSetTargetError()
 {
-    g_config.failSetSlave = false;
+    g_config.failSetTarget = false;
 }
 
 void mockLinuxWireForceWriteError(int err)
@@ -121,13 +121,13 @@ extern "C"
         }
     }
 
-    int lw_set_slave(lw_i2c_bus * /*bus*/, uint8_t addr)
+    int lw_set_target(lw_i2c_bus * /*bus*/, uint8_t addr)
     {
-        ++g_state.setSlaveCalls;
-        g_state.lastSetSlaveAddr = addr;
-        if (g_config.failSetSlave)
+        ++g_state.setTargetCalls;
+        g_state.lastSetTargetAddr = addr;
+        if (g_config.failSetTarget)
         {
-            errno = g_config.failSetSlaveErrno;
+            errno = g_config.failSetTargetErrno;
             return -1;
         }
         return 0;
@@ -148,7 +148,7 @@ ssize_t lw_write(lw_i2c_bus * /*bus*/, const uint8_t *data, size_t len, int /*se
 {
     ++g_state.writeCalls;
     g_state.lastWriteWasIoctl = false;
-    g_state.lastWriteSlaveAddr = g_state.lastSetSlaveAddr;
+    g_state.lastWriteTargetAddr = g_state.lastSetTargetAddr;
     if (g_config.failWrite)
     {
         errno = g_config.failWriteErrno;
@@ -209,11 +209,11 @@ ssize_t lw_ioctl_write(lw_i2c_bus * /*bus*/,
                        uint16_t /*flags*/)
 {
     ++g_state.writeCalls;
-    g_state.lastSetSlaveAddr = static_cast<uint8_t>(addr);
+    g_state.lastSetTargetAddr = static_cast<uint8_t>(addr);
     g_state.lastWriteBuffer.assign(iaddr, iaddr + iaddr_len);
     g_state.lastWriteBuffer.insert(g_state.lastWriteBuffer.end(), data, data + len);
     g_state.lastWriteWasIoctl = true;
-    g_state.lastWriteSlaveAddr = static_cast<uint8_t>(addr);
+    g_state.lastWriteTargetAddr = static_cast<uint8_t>(addr);
     return static_cast<ssize_t>(len);
 }
 

@@ -73,10 +73,10 @@ extern "C"
     void lw_close_bus(lw_i2c_bus *bus);
 
     /**
-     * Set the I2C slave address for subsequent read/write operations.
+     * Select the target address for subsequent read/write operations.
      *
      * @param bus Pointer to open lw_i2c_bus
-     * @param addr 7-bit I2C slave address (0x00-0x7F)
+     * @param addr 7-bit I2C target address (0x00-0x7F)
      *
      * @return 0 on success, -1 on error (errno set)
      *
@@ -88,7 +88,21 @@ extern "C"
      * Note: This uses the I2C_SLAVE ioctl. For 10-bit addressing or
      *       other advanced features, use the ioctl functions directly.
      */
-    int lw_set_slave(lw_i2c_bus *bus, uint8_t addr);
+    int lw_set_target(lw_i2c_bus *bus, uint8_t addr);
+
+    /**
+     * @deprecated Renamed to lw_set_target() in 0.1.3 (NXP retired the
+     *             master/slave terms from the I2C specification in 2021).
+     *             This alias keeps existing callers building; it will be
+     *             removed in a later release.
+     */
+#if defined(__GNUC__) || defined(__clang__)
+    __attribute__((deprecated("use lw_set_target")))
+#endif
+    static inline int lw_set_slave(lw_i2c_bus *bus, uint8_t addr)
+    {
+        return lw_set_target(bus, addr);
+    }
 
     /**
      * @brief Check whether a device acknowledges an address, without
@@ -110,7 +124,7 @@ extern "C"
      * EBUSY, and i2cdetect shows it as "UU"); it is reported as 1.
      *
      * On return the bus's selected address is @p addr, as after
-     * lw_set_slave().
+     * lw_set_target().
      *
      * @param bus Pointer to open lw_i2c_bus
      * @param addr 7-bit I2C address (0x00-0x7F)
@@ -133,7 +147,7 @@ extern "C"
     int lw_probe(lw_i2c_bus *bus, uint8_t addr);
 
     /**
-     * Write data to the currently-selected I2C slave.
+     * Write data to the currently-selected target.
      *
      * @param bus Pointer to open lw_i2c_bus
      * @param data Pointer to data buffer to write
@@ -159,7 +173,7 @@ extern "C"
                      int send_stop);
 
     /**
-     * Read data from the currently-selected I2C slave.
+     * Read data from the currently-selected target.
      *
      * @param bus Pointer to open lw_i2c_bus
      * @param data Pointer to buffer to receive data
@@ -173,7 +187,7 @@ extern "C"
      *   ENXIO    - No device at selected address (NACK)
      *   ETIMEDOUT - Communication timeout
      *
-     * Note: Make sure to call lw_set_slave() before reading.
+     * Note: Make sure to call lw_set_target() before reading.
      */
     ssize_t lw_read(lw_i2c_bus *bus,
                     uint8_t *data,

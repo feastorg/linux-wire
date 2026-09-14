@@ -1,5 +1,5 @@
 /*
- * C example: master_multiplier
+ * C example: controller_multiplier
  * Sends a byte to a device and reads the response (expected multiply result).
  */
 

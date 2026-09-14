@@ -22,10 +22,10 @@
  * A minimal, Arduino-compatible TwoWire implementation for Linux.
  *
  * This class provides an Arduino Wire API wrapper around Linux /dev/i2c-* devices.
- * It supports master-mode I2C communication only.
+ * It supports controller-mode I2C communication only.
  *
  * Key differences from Arduino Wire:
- *  - Master mode only (no slave callbacks - Linux userspace I2C limitations)
+ *  - Controller mode only (no peripheral callbacks - Linux userspace I2C limitations)
  *  - No inheritance from Stream / Print classes
  *  - setClock() is a no-op (bus speed configured via device tree/kernel)
  *  - flush() is a no-op (no hardware FIFO in userspace)
@@ -70,12 +70,12 @@ public:
     void begin(const char *device = "/dev/i2c-1");
 
     /**
-     * Arduino-style overloads for slave mode compatibility.
-     * On Linux these are no-ops (slave mode not supported in userspace).
+     * Arduino-style overloads for peripheral (target) mode compatibility.
+     * On Linux these are no-ops (target mode not supported in userspace).
      *
-     * @param address Slave address (ignored)
+     * @param address Peripheral address (ignored)
      *
-     * Note: Linux I2C slave support requires kernel-mode drivers.
+     * Note: Linux I2C target support requires kernel-mode drivers.
      */
     void begin(uint8_t address);
     void begin(int address);
@@ -135,9 +135,9 @@ public:
     void setErrorLogging(bool enable);
 
     /**
-     * Begin a master transmission to the specified I2C address.
+     * Begin a controller transmission to the specified I2C address.
      *
-     * @param address 7-bit I2C slave address
+     * @param address 7-bit I2C target address
      *
      * After calling this, use write() to queue data, then call
      * endTransmission() to actually send it.
@@ -181,9 +181,9 @@ public:
     uint8_t endTransmission(void);
 
     /**
-     * Request data from an I2C slave device.
+     * Request data from an I2C peripheral.
      *
-     * @param address 7-bit I2C slave address
+     * @param address 7-bit I2C target address
      * @param quantity Number of bytes to request (max: LINUX_WIRE_BUFFER_LENGTH)
      * @param iaddress Internal register address (for register reads)
      * @param isize Size of internal address in bytes (1-4)

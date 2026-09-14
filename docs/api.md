@@ -22,7 +22,7 @@ typedef struct
 | ----------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
 | `int lw_open_bus(lw_i2c_bus *bus, const char *path);`       | Opens `/dev/i2c-X` and populates the handle. Returns `0` on success, `-1` on error (sets `errno`) and resets the handle to a closed state on failure. |
 | `void lw_close_bus(lw_i2c_bus *bus);`                       | Closes the file descriptor if open. Safe to call multiple times.                                   |
-| `int lw_set_slave(lw_i2c_bus *bus, uint8_t addr);`          | Issues `I2C_SLAVE` ioctl to select the target address. Rejects values above `0x7F` with `EINVAL`. |
+| `int lw_set_target(lw_i2c_bus *bus, uint8_t addr);`         | Issues `I2C_SLAVE` ioctl to select the target address (`lw_set_slave` remains as a deprecated alias). Rejects values above `0x7F` with `EINVAL`. |
 | `int lw_probe(lw_i2c_bus *bus, uint8_t addr);`              | SMBus Quick Write (what `i2cdetect -q` issues): address + write bit, no data. Returns `0` if the address acknowledged, `1` if a kernel driver owns it (present, not probed), `-1` otherwise (`errno` set; `EOPNOTSUPP` = adapter cannot do Quick). Never logs. The only zero-data probe; `lw_write`/`lw_ioctl_write` reject empty messages. Quick Write can corrupt an Atmel AT24RF08 — avoid on 0x30-0x37 / 0x50-0x5F if one may be present. |
 | `int lw_set_timeout(lw_i2c_bus *bus, uint32_t timeout_us);` | Stores a timeout hint (currently informational).                                                   |
 
@@ -49,21 +49,21 @@ The helpers validate inputs (non-null buffers, length ≤ 4096, etc.) before cal
 
 ## C++ API (`Wire.h`)
 
-`TwoWire` mirrors the Arduino Wire API for master-mode use. A global `TwoWire Wire;` instance is provided, but you can instantiate additional objects if desired.
+`TwoWire` mirrors the Arduino Wire API for controller-mode use. A global `TwoWire Wire;` instance is provided, but you can instantiate additional objects if desired.
 
 ### Core Methods
 
 | Method                                                                               | Description                                                                                                                                        |
 | ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `void begin(const char *device = "/dev/i2c-1");`                                     | Opens the specified I²C device. Calling `begin()` again reopens the bus and re-applies stored timeout/logging preferences.                           |
-| `void begin(uint8_t); void begin(int);`                                              | Provided for Arduino compatibility; they’re no-ops in Linux master mode.                                                                           |
+| `void begin(uint8_t); void begin(int);`                                              | Provided for Arduino compatibility; they’re no-ops in Linux controller mode.                                                                           |
 | `void end();`                                                                        | Closes the bus and clears buffers.                                                                                                                 |
 | `void setClock(uint32_t frequency);`                                                 | Currently a no-op (bus speed is controlled by the kernel).                                                                                         |
 | `void setWireTimeout(uint32_t timeout_us = 25000, bool reset_with_timeout = false);` | Stores a timeout threshold; when the underlying I/O reports `ETIMEDOUT`, `getWireTimeoutFlag()` becomes true and (optionally) the bus is reopened with the same timeout hint still applied. |
 | `bool getWireTimeoutFlag() const;` / `void clearWireTimeoutFlag();`                  | Query/reset the timeout flag.                                                                                                                      |
 | `void setErrorLogging(bool enable);`                                                 | Toggle low-level `perror` logging (handy when probing addresses that are expected to NACK). The preference survives reopen operations.              |
 
-### Master Transmit
+### Controller Transmit
 
 | Method                                                                                                              | Description                                                                                                                                                                                                           |
 | ------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -72,7 +72,7 @@ The helpers validate inputs (non-null buffers, length ≤ 4096, etc.) before cal
 | `uint8_t endTransmission(uint8_t sendStop = 1);`                                                                    | Writes the buffered bytes. Return codes match Arduino: `0` success, `1` buffer overflow, `2` NACK on address (empty transmission probes with `lw_probe`), `4` other error / timeout. Passing `0` for `sendStop` defers the actual write until the next `requestFrom` (repeated-start semantics). If an older deferred write must be auto-flushed first and that flush fails, this call returns `4`. |
 | `size_t write(uint8_t data);` / `size_t write(const uint8_t *data, size_t len);` / `size_t write(const char *str);` | Append data to the TX buffer (up to 32 bytes).                                                                                                                                                                        |
 
-### Master Receive
+### Controller Receive
 
 | Method                                                                                                              | Description                                                                                                                                        |
 | ------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -100,7 +100,7 @@ The helpers validate inputs (non-null buffers, length ≤ 4096, etc.) before cal
 See the `examples/` directory for concrete flows:
 
 - `i2c_scanner`: iterates over addresses and probes each one — the C++ version through an empty `endTransmission()` (which uses `lw_probe()` underneath), the C version through `lw_probe()` directly. Neither reads from or writes to the devices it finds.
-- `master_writer`: simple register write.
-- `master_reader`: demonstrates `endTransmission(false)` + `requestFrom` repeated-start read.
+- `controller_writer`: simple register write.
+- `controller_reader`: demonstrates `endTransmission(false)` + `requestFrom` repeated-start read.
 
 For mock-based tests of buffer management, deferred-write failure handling, and timeout logic, inspect `tests/test_wire.cpp`.

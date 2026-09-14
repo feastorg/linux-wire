@@ -43,7 +43,15 @@ int main(void)
     assert(bus.device_path[0] == '\0');
     assert(bus.timeout_us == 0);
 
-    EXPECT_ERR(lw_set_slave(&bus, 0x10), EBADF);
+    EXPECT_ERR(lw_set_target(&bus, 0x10), EBADF);
+#if defined(__GNUC__) || defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+    EXPECT_ERR(lw_set_slave(&bus, 0x10), EBADF); /* deprecated alias still works */
+#if defined(__GNUC__) || defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
     EXPECT_ERR(lw_probe(&bus, 0x10), EBADF);
 
     uint8_t byte = 0x00;
@@ -56,7 +64,7 @@ int main(void)
     EXPECT_ERR(lw_ioctl_write(&bus, 0x10, &byte, 1, &byte, 1, 0), EBADF);
 
     bus.fd = 0; /* bypass fd check to hit other validation branches */
-    EXPECT_ERR(lw_set_slave(&bus, 0x80), EINVAL);
+    EXPECT_ERR(lw_set_target(&bus, 0x80), EINVAL);
     EXPECT_ERR(lw_probe(&bus, 0x80), EINVAL);
     EXPECT_ERR(lw_probe(NULL, 0x10), EINVAL);
 

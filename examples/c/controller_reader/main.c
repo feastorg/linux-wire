@@ -1,5 +1,5 @@
 /*
- * C example: master_reader
+ * C example: controller_reader
  * Reads a single register from an I2C device using a repeated-start (ioctl) read.
  */
 
@@ -20,7 +20,7 @@ int main(void)
         return 1;
     }
 
-    printf("Master Reader Example\n");
+    printf("Controller Reader Example\n");
 
     uint8_t value = 0;
     ssize_t r = lw_ioctl_read(&bus, DEVICE_ADDR, &REGISTER_ADDR, 1, &value, 1, 0);
