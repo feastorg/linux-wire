@@ -21,6 +21,8 @@ namespace
         int failSetSlaveErrno = ENXIO;
         bool failWrite = false;
         int failWriteErrno = EIO;
+        int probeResult = 0;
+        int probeErrno = ENXIO;
     };
 
     MockLinuxWireState g_state;
@@ -31,6 +33,12 @@ void mockLinuxWireReset()
 {
     g_state = MockLinuxWireState{};
     g_config = MockConfig{};
+}
+
+void mockLinuxWireSetProbeResult(int result, int err)
+{
+    g_config.probeResult = result;
+    g_config.probeErrno = err;
 }
 
 void mockLinuxWireSetReadData(const std::vector<uint8_t> &data)
@@ -123,6 +131,17 @@ extern "C"
             return -1;
         }
         return 0;
+    }
+
+    int lw_probe(lw_i2c_bus * /*bus*/, uint8_t addr)
+    {
+        ++g_state.probeCalls;
+        g_state.lastProbeAddr = addr;
+        if (g_config.probeResult < 0)
+        {
+            errno = g_config.probeErrno;
+        }
+        return g_config.probeResult;
     }
 
 ssize_t lw_write(lw_i2c_bus * /*bus*/, const uint8_t *data, size_t len, int /*send_stop*/)

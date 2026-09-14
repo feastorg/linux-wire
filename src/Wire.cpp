@@ -188,6 +188,26 @@ uint8_t TwoWire::endTransmission(uint8_t sendStop)
         return 4;
     }
 
+    /* Nothing queued: the Arduino idiom for "is anyone at this address?".
+       lw_write cannot send zero bytes (it returns 0 without touching the
+       bus), so probe with an SMBus Quick Write instead. */
+    if (txBufferLength_ == 0)
+    {
+        int rc = lw_probe(&bus_, txAddress_);
+        transmitting_ = false;
+        resetTxBuffer();
+        if (rc >= 0)
+        {
+            return 0; /* acknowledged, or owned by a kernel driver: present */
+        }
+        if (errno == ENXIO || errno == EREMOTEIO || errno == EIO)
+        {
+            return 2; /* NACK on address */
+        }
+        handleTimeoutFromErrno(); /* ETIMEDOUT sets the timeout flag, as on the write path */
+        return 4; /* timeout, adapter cannot probe, or bus error */
+    }
+
     /* Select slave */
     if (lw_set_slave(&bus_, txAddress_) != 0)
     {

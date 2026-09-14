@@ -69,7 +69,7 @@ The helpers validate inputs (non-null buffers, length ≤ 4096, etc.) before cal
 | ------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `void beginTransmission(uint8_t address);`                                                                          | Starts buffering data for the given device.                                                                                                                                                                           |
 | `void beginTransmission(int address);`                                                                              | Overload that forwards to the `uint8_t` version.                                                                                                                                                                      |
-| `uint8_t endTransmission(uint8_t sendStop = 1);`                                                                    | Writes the buffered bytes. Return codes match Arduino: `0` success, `1` buffer overflow, `4` other error. Passing `0` for `sendStop` defers the actual write until the next `requestFrom` (repeated-start semantics). If an older deferred write must be auto-flushed first and that flush fails, this call returns `4`. |
+| `uint8_t endTransmission(uint8_t sendStop = 1);`                                                                    | Writes the buffered bytes. Return codes match Arduino: `0` success, `1` buffer overflow, `2` NACK on address (empty transmission probes with `lw_probe`), `4` other error / timeout. Passing `0` for `sendStop` defers the actual write until the next `requestFrom` (repeated-start semantics). If an older deferred write must be auto-flushed first and that flush fails, this call returns `4`. |
 | `size_t write(uint8_t data);` / `size_t write(const uint8_t *data, size_t len);` / `size_t write(const char *str);` | Append data to the TX buffer (up to 32 bytes).                                                                                                                                                                        |
 
 ### Master Receive
@@ -99,7 +99,7 @@ The helpers validate inputs (non-null buffers, length ≤ 4096, etc.) before cal
 
 See the `examples/` directory for concrete flows:
 
-- `i2c_scanner`: iterates over addresses and uses `endTransmission()` to probe each one.
+- `i2c_scanner`: iterates over addresses and probes each one — the C++ version through an empty `endTransmission()` (which uses `lw_probe()` underneath), the C version through `lw_probe()` directly. Neither reads from or writes to the devices it finds.
 - `master_writer`: simple register write.
 - `master_reader`: demonstrates `endTransmission(false)` + `requestFrom` repeated-start read.
 
