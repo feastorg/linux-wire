@@ -4,7 +4,6 @@
 #include <errno.h>
 #include <stdint.h>
 #include <string.h>
-#include <fcntl.h>
 #include <unistd.h>
 
 #define EXPECT_ERR(call, err)       \
@@ -66,16 +65,17 @@ int main(void)
     EXPECT_ERR(lw_ioctl_write(&bus, 0x20, NULL, 0, NULL, 0, 0), EINVAL);
 
     /* A real fd that is not an I2C adapter: the I2C_SLAVE ioctl fails with
-       ENOTTY, proving lw_probe reaches the ioctl and propagates errno. */
+       ENOTTY, proving lw_probe reaches the ioctl and propagates errno. A pipe
+       needs no device node, so this holds in any sandbox. */
     {
-        int fd = open("/dev/null", O_RDWR);
-        assert(fd >= 0);
-        bus.fd = fd;
-        bus.log_errors = 0;
+        int fds[2];
+        assert(pipe(fds) == 0);
+        bus.fd = fds[1];
+        bus.log_errors = 1; /* and nothing may be printed: lw_probe never logs */
         EXPECT_ERR(lw_probe(&bus, 0x10), ENOTTY);
-        close(fd);
+        close(fds[0]);
+        close(fds[1]);
         bus.fd = 0;
-        bus.log_errors = 1;
     }
 
     lw_set_error_logging(&bus, 0);

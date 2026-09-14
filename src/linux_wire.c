@@ -150,7 +150,7 @@ int lw_set_slave(lw_i2c_bus *bus, uint8_t addr)
 
 int lw_probe(lw_i2c_bus *bus, uint8_t addr)
 {
-    if (!bus || addr > 0x7F)
+    if (!bus)
     {
         errno = EINVAL;
         return -1;
@@ -162,9 +162,21 @@ int lw_probe(lw_i2c_bus *bus, uint8_t addr)
         return -1;
     }
 
-    if (lw_set_slave(bus, addr) != 0)
+    if (addr > 0x7F)
     {
-        return -1; /* errno from the I2C_SLAVE ioctl (EBUSY if a driver owns it) */
+        errno = EINVAL;
+        return -1;
+    }
+
+    /* Select the address directly rather than via lw_set_slave(): a driver-
+       owned address is a normal result of a sweep, not an error to perror. */
+    if (ioctl(bus->fd, I2C_SLAVE, (unsigned long)addr) < 0)
+    {
+        if (errno == EBUSY)
+        {
+            return 1; /* a kernel driver owns it: present, and not ours to probe */
+        }
+        return -1;
     }
 
     /* SMBus Quick Write: address + write bit, then STOP. No data phase. */
@@ -177,9 +189,7 @@ int lw_probe(lw_i2c_bus *bus, uint8_t addr)
 
     if (ioctl(bus->fd, I2C_SMBUS, &args) < 0)
     {
-        /* A NACK is the expected outcome for an empty address; do not log it
-           through perror, callers scan whole ranges with this. */
-        return -1;
+        return -1; /* NACK (absent), or EOPNOTSUPP if the adapter lacks Quick */
     }
 
     return 0;

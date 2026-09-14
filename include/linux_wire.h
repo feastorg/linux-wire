@@ -96,25 +96,39 @@ extern "C"
      *
      * Issues an SMBus Quick Write (I2C_SMBUS ioctl, I2C_SMBUS_QUICK): the
      * address is sent with the write bit and the transaction ends there.
-     * This is the probe i2cdetect uses by default, and it is the only way
-     * to test for a device without reading from it or writing to it -
-     * lw_write() and lw_ioctl_write() cannot send a zero-length message.
+     * This is what `i2cdetect -q` issues. It is the only way to test for a
+     * device without reading from it or writing to it - lw_write() and
+     * lw_ioctl_write() cannot send a zero-length message.
      *
-     * The device is selected with the I2C_SLAVE ioctl first, so a device
-     * already claimed by a kernel driver reports EBUSY rather than being
-     * probed; treat that as "present".
+     * Caveat, from the i2cdetect manual: Quick Write is known to corrupt
+     * the Atmel AT24RF08 EEPROM, which is why i2cdetect's default mode
+     * uses a one-byte read instead on 0x30-0x37 and 0x50-0x5F. If such a
+     * part may be on the bus, skip those ranges or use lw_read() there.
+     *
+     * The address is first selected with the I2C_SLAVE ioctl. An address
+     * owned by a kernel driver is not probed (the kernel refuses with
+     * EBUSY, and i2cdetect shows it as "UU"); it is reported as 1.
+     *
+     * On return the bus's selected address is @p addr, as after
+     * lw_set_slave().
      *
      * @param bus Pointer to open lw_i2c_bus
      * @param addr 7-bit I2C address (0x00-0x7F)
      *
-     * @return 0 if the address acknowledged, -1 otherwise (errno set)
+     * @return 0 if the address acknowledged;
+     *         1 if a kernel driver owns the address (present, not probed);
+     *        -1 otherwise (errno set)
      *
-     * Error conditions:
-     *   EINVAL - NULL bus or address above 0x7F
+     * errno on -1:
      *   EBADF  - Bus not open (fd < 0)
-     *   EBUSY  - Address claimed by a kernel driver (device present)
-     *   ENXIO, EREMOTEIO, EIO, ETIMEDOUT - no acknowledge (device absent),
-     *            or the adapter does not support SMBus Quick (EOPNOTSUPP)
+     *   EINVAL - NULL bus or address above 0x7F
+     *   ENXIO, EREMOTEIO, EIO, ETIMEDOUT - no acknowledge (device absent)
+     *   EOPNOTSUPP - the adapter cannot do SMBus Quick; every address will
+     *                report -1 with this errno, so check it once before
+     *                sweeping a range
+     *
+     * Nothing is logged on -1, whatever lw_set_error_logging() is set to:
+     * callers sweep whole ranges and a NACK is the normal result.
      */
     int lw_probe(lw_i2c_bus *bus, uint8_t addr);
 
