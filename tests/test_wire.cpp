@@ -251,6 +251,23 @@ static void testEmptyTransmissionProbesInsteadOfWriting()
     mockLinuxWireSetProbeResult(-1, EOPNOTSUPP); /* adapter cannot probe */
     tw.beginTransmission(static_cast<uint8_t>(0x42));
     assert(tw.endTransmission() == 4);
+    assert(!tw.getWireTimeoutFlag());
+
+    /* A timeout during a probe is a timeout, not a NACK: code 4 and the flag,
+       exactly as on the write path. */
+    tw.setWireTimeout(1000, false);
+    mockLinuxWireSetProbeResult(-1, ETIMEDOUT);
+    tw.beginTransmission(static_cast<uint8_t>(0x44));
+    assert(tw.endTransmission() == 4);
+    assert(tw.getWireTimeoutFlag());
+    tw.clearWireTimeoutFlag();
+    tw.setWireTimeout(0, false);
+
+    /* The probe path ends the transmission: a stray write() is refused. */
+    mockLinuxWireSetProbeResult(0, 0);
+    tw.beginTransmission(static_cast<uint8_t>(0x40));
+    assert(tw.endTransmission() == 0);
+    assert(tw.write(static_cast<uint8_t>(0x01)) == 0);
 
     /* A transmission with data still goes through lw_write, not lw_probe. */
     mockLinuxWireSetProbeResult(0, 0);
@@ -259,7 +276,7 @@ static void testEmptyTransmissionProbesInsteadOfWriting()
     assert(tw.endTransmission() == 0);
     {
         const auto &state = mockLinuxWireState();
-        assert(state.probeCalls == 4);
+        assert(state.probeCalls == 6);
         assert(state.writeCalls == 1);
     }
 

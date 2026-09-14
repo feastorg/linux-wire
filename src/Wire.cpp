@@ -200,12 +200,12 @@ uint8_t TwoWire::endTransmission(uint8_t sendStop)
         {
             return 0; /* acknowledged, or owned by a kernel driver: present */
         }
-        if (errno == ENXIO || errno == EREMOTEIO || errno == EIO || errno == ETIMEDOUT)
+        if (errno == ENXIO || errno == EREMOTEIO || errno == EIO)
         {
             return 2; /* NACK on address */
         }
-        handleTimeoutFromErrno();
-        return 4; /* adapter cannot probe, or bus error */
+        handleTimeoutFromErrno(); /* ETIMEDOUT sets the timeout flag, as on the write path */
+        return 4; /* timeout, adapter cannot probe, or bus error */
     }
 
     /* Select slave */

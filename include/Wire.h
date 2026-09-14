@@ -160,7 +160,14 @@ public:
      * @return Error code:
      *         0 = success
      *         1 = data too long for buffer
-     *         4 = other error (bus not open, NACK, etc.)
+     *         2 = NACK on address (only from an empty transmission, which
+     *             probes the address with lw_probe() instead of writing)
+     *         4 = other error (bus not open, NACK on data, timeout, etc.)
+     *
+     * An empty transmission with sendStop != 0 is the Arduino "is anyone
+     * there?" idiom. It issues an SMBus Quick Write, which can corrupt an
+     * Atmel AT24RF08 EEPROM (see lw_probe()); avoid probing 0x30-0x37 and
+     * 0x50-0x5F if one may be present. A driver-owned address counts as 0.
      *
      * Note: sendStop=0 enables repeated-start emulation for the next
      *       requestFrom() call, avoiding an intervening STOP condition.

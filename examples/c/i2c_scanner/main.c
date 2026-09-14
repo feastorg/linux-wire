@@ -3,6 +3,7 @@
  * Mirrors examples/cpp/i2c_scanner/main.cpp but uses the C API (linux_wire.h)
  */
 
+#include <errno.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <sys/types.h>
@@ -18,6 +19,14 @@ int main(void)
     }
 
     printf("Scanning I2C bus /dev/i2c-1...\n");
+
+    /* An adapter without SMBus Quick makes every probe fail the same way;
+       say so once instead of printing an empty scan. */
+    if (lw_probe(&bus, 0x03) < 0 && errno == EOPNOTSUPP) {
+        fprintf(stderr, "Adapter does not support SMBus Quick Write; cannot probe\n");
+        lw_close_bus(&bus);
+        return 1;
+    }
 
     for (int addr = 0x03; addr <= 0x77; ++addr)
     {
