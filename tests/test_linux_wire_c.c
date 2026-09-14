@@ -4,6 +4,7 @@
 #include <errno.h>
 #include <stdint.h>
 #include <string.h>
+#include <unistd.h>
 
 #define EXPECT_ERR(call, err)       \
     do                              \
@@ -43,6 +44,7 @@ int main(void)
     assert(bus.timeout_us == 0);
 
     EXPECT_ERR(lw_set_slave(&bus, 0x10), EBADF);
+    EXPECT_ERR(lw_probe(&bus, 0x10), EBADF);
 
     uint8_t byte = 0x00;
     uint8_t buf[1];
@@ -55,10 +57,26 @@ int main(void)
 
     bus.fd = 0; /* bypass fd check to hit other validation branches */
     EXPECT_ERR(lw_set_slave(&bus, 0x80), EINVAL);
+    EXPECT_ERR(lw_probe(&bus, 0x80), EINVAL);
+    EXPECT_ERR(lw_probe(NULL, 0x10), EINVAL);
 
     EXPECT_ERR(lw_ioctl_write(&bus, 0x20, NULL, 1, &byte, 1, 0), EINVAL);
     EXPECT_ERR(lw_ioctl_write(&bus, 0x20, &byte, 1, NULL, 1, 0), EINVAL);
     EXPECT_ERR(lw_ioctl_write(&bus, 0x20, NULL, 0, NULL, 0, 0), EINVAL);
+
+    /* A real fd that is not an I2C adapter: the I2C_SLAVE ioctl fails with
+       ENOTTY, proving lw_probe reaches the ioctl and propagates errno. A pipe
+       needs no device node, so this holds in any sandbox. */
+    {
+        int fds[2];
+        assert(pipe(fds) == 0);
+        bus.fd = fds[1];
+        bus.log_errors = 1; /* and nothing may be printed: lw_probe never logs */
+        EXPECT_ERR(lw_probe(&bus, 0x10), ENOTTY);
+        close(fds[0]);
+        close(fds[1]);
+        bus.fd = 0;
+    }
 
     lw_set_error_logging(&bus, 0);
     assert(bus.log_errors == 0);

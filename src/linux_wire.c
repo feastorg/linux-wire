@@ -148,6 +148,53 @@ int lw_set_slave(lw_i2c_bus *bus, uint8_t addr)
     return 0;
 }
 
+int lw_probe(lw_i2c_bus *bus, uint8_t addr)
+{
+    if (!bus)
+    {
+        errno = EINVAL;
+        return -1;
+    }
+
+    if (bus->fd < 0)
+    {
+        errno = EBADF;
+        return -1;
+    }
+
+    if (addr > 0x7F)
+    {
+        errno = EINVAL;
+        return -1;
+    }
+
+    /* Select the address directly rather than via lw_set_slave(): a driver-
+       owned address is a normal result of a sweep, not an error to perror. */
+    if (ioctl(bus->fd, I2C_SLAVE, (unsigned long)addr) < 0)
+    {
+        if (errno == EBUSY)
+        {
+            return 1; /* a kernel driver owns it: present, and not ours to probe */
+        }
+        return -1;
+    }
+
+    /* SMBus Quick Write: address + write bit, then STOP. No data phase. */
+    struct i2c_smbus_ioctl_data args;
+    memset(&args, 0, sizeof(args));
+    args.read_write = I2C_SMBUS_WRITE;
+    args.command = 0;
+    args.size = I2C_SMBUS_QUICK;
+    args.data = NULL;
+
+    if (ioctl(bus->fd, I2C_SMBUS, &args) < 0)
+    {
+        return -1; /* NACK (absent), or EOPNOTSUPP if the adapter lacks Quick */
+    }
+
+    return 0;
+}
+
 ssize_t lw_write(lw_i2c_bus *bus,
                  const uint8_t *data,
                  size_t len,
