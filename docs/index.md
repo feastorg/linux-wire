@@ -123,4 +123,4 @@ GitHub Actions runs on `ubuntu-22.04` (closest to Raspberry Pi OS Bookworm). The
 
 ## License
 
-`linux-wire` is GPL-3.0-or-later. See [LICENSE](../LICENSE) for details.
+`linux-wire` is MPL-2.0. See [LICENSE](../LICENSE) for details.
